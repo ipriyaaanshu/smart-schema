@@ -1,0 +1,74 @@
+[project]
+name = "smart-schema"
+version = "0.1.1"
+description = "A tool for generating and validating data schemas"
+authors = [
+    {name = "Priyanshu Sharma", email = "ipriyaaanshu@gmail.com"},
+]
+dependencies = [
+    "pydantic>=2.0.0",
+    "pandas>=2.0.0",
+    "typer==0.12.3",
+    "rich==13.7.0",
+    "click==8.1.7",
+]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/smart-schema"
+Repository = "https://github.com/yourusername/smart-schema.git"
+
+[project.scripts]
+smart-schema = "smart_schema.cli.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["smart_schema"]
+
+[tool.uv]
+dev-dependencies = [
+    "black==24.1.1",
+    "isort==5.13.2",
+    "mypy==1.8.0",
+    "pandas==2.2.0",
+    "pydantic==2.6.1",
+    "pytest==8.0.0",
+    "ruff==0.2.1",
+    "asyncpg==0.29.0",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py38"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --cov=smart_schema"
