@@ -27,8 +27,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/smart-schema"
-Repository = "https://github.com/yourusername/smart-schema.git"
+Homepage = "https://github.com/ipriyaaanshu/smart-schema"
+Repository = "https://github.com/ipriyaaanshu/smart-schema.git"
 
 [project.scripts]
 smart-schema = "smart_schema.cli.cli:app"
@@ -57,7 +57,7 @@ dev-dependencies = [
 
 [tool.black]
 line-length = 100
-target-version = ["py38"]
+target-version = ["py312"]
 
 [tool.isort]
 profile = "black"
