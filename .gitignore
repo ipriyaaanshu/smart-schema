@@ -1,8 +1,13 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# C extensions
+*.pyd
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -19,15 +24,19 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.manifest
+*.spec
 
-# Virtual Environment
+# Virtual environments
 .env
 .venv
 env/
 venv/
 ENV/
+.venv/
+pip-wheel-metadata/
 
-# IDE
+# IDEs and editors
 .idea/
 .vscode/
 *.swp
@@ -35,14 +44,48 @@ ENV/
 
 # Testing
 .coverage
+.coverage.*
 htmlcov/
 .pytest_cache/
 .tox/
+.nox/
+.hypothesis/
+*.csv
+*.json
 
-# Distribution
-dist/
-build/
+# Jupyter/IPython
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# Pandas profiling
+__pandas_profile_report__/
+
+# System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+.Spotlight-V100
+.Trashes
 
 # Misc
-.DS_Store
 *.log
+.mypy_cache/
+*.bak
+*.tmp
+*.orig
+*.rej
+ROADMAP.md
+
+# Lock files (if not needed in repo)
+Pipfile.lock
+poetry.lock
+*.lock
+
+# Hatch/Poetry/PDM
+.hatch/
+.pdm.toml
+
+# Pyright
+typings/

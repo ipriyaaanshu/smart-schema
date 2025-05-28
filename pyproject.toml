@@ -56,6 +56,8 @@ dev-dependencies = [
     "ruff==0.2.1",
     "asyncpg==0.29.0",
     "ipykernel>=6.29.5",
+    "flake8>=7.2.0",
+    "pytest-cov>=6.1.1",
 ]
 
 [tool.black]
