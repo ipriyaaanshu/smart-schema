@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Type, Union, get_args, get_origin,
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, Field, create_model, validator
+from pydantic import BaseModel, Field, create_model, validator, ValidationError
 
 from ..utils.dataframe_utils import (
     align_dataframe_with_model,
@@ -259,59 +259,88 @@ def save_model_to_file(
     # Collect all nested models and their dependencies
     nested_models = {}
     model_dependencies = {}
+    required_imports = {
+        "from typing import Union, Optional, Any, List, Dict",
+        "from pydantic import BaseModel, Field, validator",
+        "import math"
+    }
 
-    def collect_nested_models(model_type: Type[BaseModel], model_name: str) -> None:
-        if model_name in nested_models:
+    def get_type_module_and_name(type_hint: Any) -> tuple[Optional[str], str]:
+        """Helper to get module and name for a type hint, handling complex types."""
+        origin = get_origin(type_hint)
+        args = get_args(type_hint)
+
+        if origin is Union:
+            actual_args = [arg for arg in args if arg is not type(None)]
+            if actual_args:
+                return get_type_module_and_name(actual_args[0])
+            return None, "Any"
+        if origin in (List, list, Dict, dict):
+            for arg in args:
+                module, _ = get_type_module_and_name(arg)
+                if module and module not in ['typing', '__builtin__']:
+                    required_imports.add(f"from {module} import {arg.__name__ if hasattr(arg, '__name__') else arg}")
+            return None, type_hint.__name__ if hasattr(type_hint, '__name__') else str(type_hint)
+        
+        module = getattr(type_hint, '__module__', None)
+        name = getattr(type_hint, '__name__', str(type_hint))
+        return module, name
+
+    def collect_nested_models(model_type: Type[BaseModel], model_name_param: str) -> None:
+        if model_name_param in nested_models:
             return
 
-        nested_models[model_name] = model_type
-        model_dependencies[model_name] = set()
+        nested_models[model_name_param] = model_type
+        model_dependencies[model_name_param] = set()
 
-        for field_name, field in model_type.model_fields.items():
-            field_type = field.annotation
-            if hasattr(field_type, "__origin__") and field_type.__origin__ is list:
-                # Handle list types
-                item_type = field_type.__args__[0]
-                if hasattr(item_type, "__name__") and item_type.__name__ != "Any":
-                    item_name = item_type.__name__
-                    if hasattr(item_type, "model_fields"):
-                        model_dependencies[model_name].add(item_name)
-                        collect_nested_models(item_type, item_name)
-            elif hasattr(field_type, "__name__") and field_type.__name__ != "Any":
-                # Handle direct model types
-                type_name = field_type.__name__
-                if hasattr(field_type, "model_fields"):
-                    model_dependencies[model_name].add(type_name)
-                    collect_nested_models(field_type, type_name)
+        for field in model_type.model_fields.values():
+            field_type_annotation = field.annotation
+            
+            module, type_name = get_type_module_and_name(field_type_annotation)
+            if module and module not in ['typing', '__builtin__']:
+                actual_type_to_import = type_name
+                if '.' in type_name:
+                     actual_type_to_import = type_name.split('.')[-1]
+                
+                is_nested_model = False
+                if module == model_type.__module__ :
+                    if hasattr(field_type_annotation, 'model_fields'):
+                         is_nested_model = True
+                
+                if not is_nested_model:
+                     required_imports.add(f"from {module} import {actual_type_to_import}")
 
-    # Collect all nested models starting from the main model
+            origin = get_origin(field_type_annotation)
+            args = get_args(field_type_annotation)
+
+            if origin is list and args and hasattr(args[0], 'model_fields'):
+                item_type = args[0]
+                item_name = item_type.__name__
+                model_dependencies[model_name_param].add(item_name)
+                collect_nested_models(item_type, item_name)
+            elif hasattr(field_type_annotation, 'model_fields'):
+                type_name = field_type_annotation.__name__
+                model_dependencies[model_name_param].add(type_name)
+                collect_nested_models(field_type_annotation, type_name)
+
     collect_nested_models(model, model_name)
 
-    # Sort models by dependencies (topological sort)
     sorted_models = []
     visited = set()
 
-    def visit(model_name: str) -> None:
-        if model_name in visited:
+    def visit(model_name_to_visit: str) -> None:
+        if model_name_to_visit in visited:
             return
-        visited.add(model_name)
-        for dep in model_dependencies.get(model_name, set()):
+        visited.add(model_name_to_visit)
+        for dep in model_dependencies.get(model_name_to_visit, set()):
             visit(dep)
-        sorted_models.append(model_name)
+        sorted_models.append(model_name_to_visit)
 
-    for model_name in nested_models:
-        visit(model_name)
+    for name_to_visit in nested_models:
+        visit(name_to_visit)
 
-    # Generate model code
-    model_code = f'''"""
-Generated Pydantic model.
-"""
-
-from typing import Union, Optional, Any, List, Dict
-from pydantic import BaseModel, Field, validator
-import math
-
-'''
+    model_code = f'"""\nGenerated Pydantic model.\n"""\n\n'
+    model_code += "\n".join(sorted(list(required_imports))) + "\n\n"
 
     # Add model definitions in dependency order
     for model_name in sorted_models:
@@ -386,3 +415,44 @@ def generate_model_from_schema(
         output_file = f"{model_name.lower()}_model.py"
     save_model_to_file(model, output_file, model_name)
     return output_file
+
+
+def load_and_validate_json_as_model(
+    file_path: Union[str, Path], model_class: Type[BaseModel]
+) -> Optional[BaseModel]:
+    """
+    Load a JSON file, validate its content against a Pydantic model, and return an instance.
+
+    Args:
+        file_path: Path to the JSON file.
+        model_class: The Pydantic model class to validate against and instantiate.
+
+    Returns:
+        An instance of model_class if loading and validation are successful, None otherwise.
+        Prints error messages to the console on failure.
+    """
+    try:
+        file_path = Path(file_path) # Ensure it's a Path object
+        with open(file_path, 'r') as f:
+            config_data = json.load(f)
+        
+        # Validate and instantiate the model
+        validated_model = model_class(**config_data)
+        # print(f"Successfully loaded and validated {file_path} as {model_class.__name__}") # Optional: success message
+        return validated_model
+            
+    except FileNotFoundError:
+        print(f"Error: Configuration file not found at {file_path}")
+        return None
+    except json.JSONDecodeError:
+        print(f"Error: Invalid JSON in configuration file at {file_path}")
+        return None
+    except ValidationError as e: # Pydantic's ValidationError
+        print(f"Error: Configuration validation failed for {file_path}")
+        # print(e.errors()) # The notebook already prints this if desired
+        # For a library function, printing all errors might be too verbose by default.
+        # Consider returning errors or having a verbose flag if more detail is needed here.
+        return None
+    except Exception as e: # Catch any other unexpected errors during loading/instantiation
+        print(f"An unexpected error occurred while processing {file_path}: {e}")
+        return None
