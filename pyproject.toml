@@ -1,6 +1,6 @@
 [project]
 name = "smart-schema"
-version = "1.0.1"
+version = "1.0.2"
 description = "A tool for generating and validating data schemas"
 authors = [
     {name = "Priyanshu Sharma", email = "ipriyaaanshu@gmail.com"},
