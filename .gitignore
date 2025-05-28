@@ -35,6 +35,7 @@ venv/
 ENV/
 .venv/
 pip-wheel-metadata/
+*.sh
 
 # IDEs and editors
 .idea/
