@@ -1,6 +1,6 @@
 [project]
 name = "smart-schema"
-version = "1.0.2"
+version = "1.0.3"
 description = "A tool for generating and validating data schemas"
 authors = [
     {name = "Priyanshu Sharma", email = "ipriyaaanshu@gmail.com"},
@@ -18,7 +18,7 @@ requires-python = ">=3.9"
 readme = "README.md"
 license = {text = "MIT"}
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
