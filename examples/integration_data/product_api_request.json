@@ -1,0 +1,19 @@
+{
+  "product_id": "P008",
+  "name": "Gaming Keyboard RGB",
+  "category": "Electronics",
+  "price": 129.99,
+  "stock": 50,
+  "description": "Mechanical gaming keyboard with customizable RGB lighting.",
+  "specifications": {
+    "switch_type": "Blue",
+    "layout": "Full-size",
+    "connectivity": ["USB-C", "Bluetooth"]
+  },
+  "supplier_info": {
+    "supplier_id": "SUPP-003",
+    "name": "TechGear Inc."
+  },
+  "is_active": true,
+  "tags": ["gaming", "keyboard", "rgb", "mechanical"]
+} 

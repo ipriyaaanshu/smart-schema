@@ -1,0 +1,36 @@
+{
+  "application_name": "SmartApp",
+  "version": "1.2.3",
+  "debug_mode": true,
+  "server_settings": {
+    "host": "localhost",
+    "port": 8080,
+    "timeout_seconds": 30
+  },
+  "database_connection": {
+    "type": "postgresql",
+    "host": "db.example.com",
+    "port": 5432,
+    "username": "admin_user",
+    "password_env_var": "DB_PASSWORD",
+    "database_name": "app_data",
+    "connection_options": {
+      "ssl_mode": "require",
+      "max_connections": 100
+    }
+  },
+  "feature_flags": {
+    "new_dashboard": true,
+    "beta_user_access": false,
+    "enable_analytics": true
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(levelname)s - %(message)s",
+    "file_path": "/var/log/smart_app.log"
+  },
+  "api_keys": {
+    "payment_gateway": "env:PAYMENT_API_KEY",
+    "geocoding_service": "env:GEO_API_KEY"
+  }
+} 

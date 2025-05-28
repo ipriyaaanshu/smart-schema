@@ -1,0 +1,13 @@
+Date,ProductID,ProductName,Category,QuantitySold,UnitPrice,TotalPrice,Region
+2024-07-01,P001,Laptop Pro,Electronics,10,1200.00,12000.00,North
+2024-07-01,P002,Wireless Mouse,Accessories,50,25.00,1250.00,North
+2024-07-01,P003,Office Chair,Furniture,5,150.00,750.00,West
+2024-07-02,P001,Laptop Pro,Electronics,8,1200.00,9600.00,South
+2024-07-02,P004,Keyboard,Accessories,30,75.00,2250.00,East
+2024-07-02,P002,Wireless Mouse,Accessories,40,25.00,1000.00,North
+2024-07-03,P005,Standing Desk,Furniture,3,400.00,1200.00,West
+2024-07-03,P001,Laptop Pro,Electronics,12,1150.00,13800.00,North
+2024-07-03,P002,Wireless Mouse,Accessories,60,24.50,1470.00,South
+2024-07-04,P006,Monitor Arm,Accessories,20,90.00,1800.00,East
+2024-07-04,P003,Office Chair,Furniture,NULL,145.00,580.00,North
+2024-07-04,P007,Webcam HD,Electronics,"15",55.00,825.00,West 
