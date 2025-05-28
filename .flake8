@@ -1,0 +1,9 @@
+[flake8]
+max-line-length = 100
+# W503: Line break before binary operator (conflicts with black)
+# F401: module imported but unused
+# F821: undefined name
+# F541: f-string is missing placeholders
+# F841: local variable assigned to but never used
+# E501: Line too long (we will manually refactor lines > 100 chars, and black will handle <=100)
+ignore = W503,F401,F541,F841,E501 

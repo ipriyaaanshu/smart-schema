@@ -2,15 +2,15 @@
 Model generator for smart_schema.
 """
 
-from typing import Any, Dict, List, Optional, Type, Union
-import os
 import json
+import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Type, Union
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, create_model, Field
 from openai import OpenAI
+from pydantic import BaseModel, ConfigDict, Field, create_model
 
 from ..utils.data_transformer import json_to_dataframe, normalize_datetime
 
@@ -39,10 +39,10 @@ def _convert_numpy_type(value: Any) -> Type:
 
 
 def _infer_schema_with_openai(
-    data: Union[Dict[str, Any], pd.DataFrame], 
-    model_name: str, 
+    data: Union[Dict[str, Any], pd.DataFrame],
+    model_name: str,
     api_key: str,
-    openai_model: str = "gpt-4o-mini"
+    openai_model: str = "gpt-4o-mini",
 ) -> Dict[str, Dict[str, Any]]:
     """
     Infer schema using OpenAI's API.
@@ -58,7 +58,7 @@ def _infer_schema_with_openai(
     """
     # Convert DataFrame to dict if needed
     if isinstance(data, pd.DataFrame):
-        data = data.to_dict(orient='records')[0]  # Get first row as example
+        data = data.to_dict(orient="records")[0]  # Get first row as example
 
     # Initialize OpenAI client
     client = OpenAI(api_key=api_key)
@@ -124,10 +124,13 @@ def _infer_schema_with_openai(
     response = client.chat.completions.create(
         model=openai_model,
         messages=[
-            {"role": "system", "content": "You are a helpful assistant that generates accurate Pydantic model schemas. Always return valid JSON."},
-            {"role": "user", "content": prompt}
+            {
+                "role": "system",
+                "content": "You are a helpful assistant that generates accurate Pydantic model schemas. Always return valid JSON.",
+            },
+            {"role": "user", "content": prompt},
         ],
-        response_format={"type": "json_object"}
+        response_format={"type": "json_object"},
     )
 
     # Parse the response
@@ -147,30 +150,38 @@ def _infer_schema_with_openai(
                 field_type = Any
             else:
                 try:
-                    field_type = eval(field_info["type"], {
-                        "str": str,
-                        "int": int,
-                        "float": float,
-                        "bool": bool,
-                        "datetime": datetime,
-                        "List": List,
-                        "Dict": Dict,
-                        "Optional": Optional,
-                        "Any": Any,
-                        "Union": Union
-                    })
+                    field_type = eval(
+                        field_info["type"],
+                        {
+                            "str": str,
+                            "int": int,
+                            "float": float,
+                            "bool": bool,
+                            "datetime": datetime,
+                            "List": List,
+                            "Dict": Dict,
+                            "Optional": Optional,
+                            "Any": Any,
+                            "Union": Union,
+                        },
+                    )
                 except NameError as e:
-                    raise ValueError(f"Invalid type '{field_info['type']}' for field '{field_name}': {e}")
-            
+                    raise ValueError(
+                        f"Invalid type '{field_info['type']}' for field '{field_name}': {e}"
+                    )
+
             if field_info["is_nullable"]:
                 field_type = Optional[field_type]
-            fields[field_name] = (field_type, Field(description=field_info["description"]))
-        
+            fields[field_name] = (
+                field_type,
+                Field(description=field_info["description"]),
+            )
+
         # Create nested model with configuration
         nested_models[model_name] = create_model(
             model_name,
             __config__=ConfigDict(arbitrary_types_allowed=True),
-            **fields
+            **fields,
         )
 
     # Second pass: Update nested model references
@@ -181,30 +192,38 @@ def _infer_schema_with_openai(
                 field_type = nested_models[field_info["nested_model"]]
             else:
                 try:
-                    field_type = eval(field_info["type"], {
-                        "str": str,
-                        "int": int,
-                        "float": float,
-                        "bool": bool,
-                        "datetime": datetime,
-                        "List": List,
-                        "Dict": Dict,
-                        "Optional": Optional,
-                        "Any": Any,
-                        "Union": Union
-                    })
+                    field_type = eval(
+                        field_info["type"],
+                        {
+                            "str": str,
+                            "int": int,
+                            "float": float,
+                            "bool": bool,
+                            "datetime": datetime,
+                            "List": List,
+                            "Dict": Dict,
+                            "Optional": Optional,
+                            "Any": Any,
+                            "Union": Union,
+                        },
+                    )
                 except NameError as e:
-                    raise ValueError(f"Invalid type '{field_info['type']}' for field '{field_name}': {e}")
-            
+                    raise ValueError(
+                        f"Invalid type '{field_info['type']}' for field '{field_name}': {e}"
+                    )
+
             if field_info["is_nullable"]:
                 field_type = Optional[field_type]
-            fields[field_name] = (field_type, Field(description=field_info["description"]))
-        
+            fields[field_name] = (
+                field_type,
+                Field(description=field_info["description"]),
+            )
+
         # Update nested model with correct types
         nested_models[model_name] = create_model(
             model_name,
             __config__=ConfigDict(arbitrary_types_allowed=True),
-            **fields
+            **fields,
         )
 
     # Create main model
@@ -215,30 +234,38 @@ def _infer_schema_with_openai(
             field_type = nested_models[field_info["nested_model"]]
         else:
             try:
-                field_type = eval(field_info["type"], {
-                    "str": str,
-                    "int": int,
-                    "float": float,
-                    "bool": bool,
-                    "datetime": datetime,
-                    "List": List,
-                    "Dict": Dict,
-                    "Optional": Optional,
-                    "Any": Any,
-                    "Union": Union
-                })
+                field_type = eval(
+                    field_info["type"],
+                    {
+                        "str": str,
+                        "int": int,
+                        "float": float,
+                        "bool": bool,
+                        "datetime": datetime,
+                        "List": List,
+                        "Dict": Dict,
+                        "Optional": Optional,
+                        "Any": Any,
+                        "Union": Union,
+                    },
+                )
             except NameError as e:
-                raise ValueError(f"Invalid type '{field_info['type']}' for field '{field_name}': {e}")
-        
+                raise ValueError(
+                    f"Invalid type '{field_info['type']}' for field '{field_name}': {e}"
+                )
+
         if field_info["is_nullable"]:
             field_type = Optional[field_type]
-        fields[field_name] = (field_type, Field(description=field_info["description"]))
+        fields[field_name] = (
+            field_type,
+            Field(description=field_info["description"]),
+        )
 
     # Create main model with configuration
     return create_model(
         main_model_info["name"],
         __config__=ConfigDict(arbitrary_types_allowed=True),
-        **fields
+        **fields,
     )
 
 
@@ -246,10 +273,10 @@ class ModelGenerator:
     """Generator for Pydantic models from various data sources."""
 
     def __init__(
-        self, 
-        name: str, 
+        self,
+        name: str,
         smart_inference: bool = False,
-        openai_model: str = "gpt-4o-mini"
+        openai_model: str = "gpt-4o-mini",
     ):
         """
         Initialize the model generator.
@@ -281,7 +308,7 @@ class ModelGenerator:
 
         if api_key:
             return api_key
-        
+
         api_key = os.getenv("OPENAI_API_KEY")
         if api_key:
             return api_key
@@ -292,11 +319,11 @@ class ModelGenerator:
         )
 
     def from_dataframe(
-        self, 
-        df: pd.DataFrame, 
+        self,
+        df: pd.DataFrame,
         datetime_columns: Optional[List[str]] = None,
         api_key: Optional[str] = None,
-        openai_model: Optional[str] = None
+        openai_model: Optional[str] = None,
     ) -> Type[BaseModel]:
         """
         Generate a Pydantic model from a pandas DataFrame.
@@ -316,10 +343,7 @@ class ModelGenerator:
             if api_key:
                 # _infer_schema_with_openai now returns the Pydantic model directly
                 return _infer_schema_with_openai(
-                    df, 
-                    self.name, 
-                    api_key,
-                    openai_model or self.openai_model
+                    df, self.name, api_key, openai_model or self.openai_model
                 )
 
         # Generate field definitions
@@ -330,40 +354,43 @@ class ModelGenerator:
 
             if sample is None:
                 # Default to string if no sample available
-                fields[column] = (str, None)
+                fields[column] = (str, ...)
             elif pd.api.types.is_datetime64_any_dtype(df[column]):
                 # Handle datetime fields properly
-                fields[column] = (datetime, Field(description=f"Datetime field for {column}"))
+                fields[column] = (
+                    datetime,
+                    Field(description=f"Datetime field for {column}"),
+                )
             elif isinstance(sample, (np.integer, np.floating, np.bool_, np.ndarray)):
                 # Convert numpy types to Python types
                 python_type = _convert_numpy_type(sample)
-                fields[column] = (python_type, None)
+                fields[column] = (python_type, ...)
             elif isinstance(sample, (int, float)):
-                fields[column] = (type(sample), None)
+                fields[column] = (type(sample), ...)
             elif isinstance(sample, bool):
-                fields[column] = (bool, None)
+                fields[column] = (bool, ...)
             elif isinstance(sample, list):
                 # For lists, use the type of the first element
                 if sample and isinstance(sample[0], (int, float, np.integer, np.floating)):
                     element_type = _convert_numpy_type(sample[0])
-                    fields[column] = (List[element_type], None)
+                    fields[column] = (List[element_type], ...)
                 else:
-                    fields[column] = (List[str], None)
+                    fields[column] = (List[str], ...)
             elif isinstance(sample, dict):
-                fields[column] = (Dict[str, Any], None)
+                fields[column] = (Dict[str, Any], ...)
             else:
-                fields[column] = (str, None)
+                fields[column] = (str, ...)
 
         # Create model with configuration
         model_config = ConfigDict(arbitrary_types_allowed=True)
         return create_model(self.name, __config__=model_config, **fields)
 
     def from_json(
-        self, 
-        data: Dict[str, Any], 
+        self,
+        data: Dict[str, Any],
         datetime_columns: Optional[List[str]] = None,
         api_key: Optional[str] = None,
-        openai_model: Optional[str] = None
+        openai_model: Optional[str] = None,
     ) -> Type[BaseModel]:
         """
         Generate a Pydantic model from JSON data.
@@ -382,48 +409,47 @@ class ModelGenerator:
             api_key = self._get_openai_api_key(api_key)
             if api_key:
                 return _infer_schema_with_openai(
-                    data, 
-                    self.name, 
-                    api_key,
-                    openai_model or self.openai_model
+                    data, self.name, api_key, openai_model or self.openai_model
                 )
 
         # Store all models for reference
         models = {}
-        
+
         def process_value(value: Any, field_name: str) -> Type:
             """Process a value to determine its type."""
             if isinstance(value, dict):
                 # Create a nested model for dictionaries
                 nested_fields = {}
                 for k, v in value.items():
-                    nested_fields[k] = (process_value(v, k), None)
-                
+                    nested_fields[k] = (process_value(v, k), ...)
+
                 # Create a clean model name
                 model_name = "".join(word.capitalize() for word in field_name.split("_"))
                 if model_name not in models:
                     models[model_name] = create_model(
                         model_name,
                         __config__=ConfigDict(arbitrary_types_allowed=True),
-                        **nested_fields
+                        **nested_fields,
                     )
                 return models[model_name]
-                
+
             elif isinstance(value, list):
                 # Handle lists
                 if value and isinstance(value[0], dict):
                     # List of objects - create a nested model
                     nested_fields = {}
                     for k, v in value[0].items():
-                        nested_fields[k] = (process_value(v, k), None)
-                    
+                        nested_fields[k] = (process_value(v, k), ...)
+
                     # Create a clean model name for list items
-                    model_name = "".join(word.capitalize() for word in field_name.split("_")) + "Item"
+                    model_name = (
+                        "".join(word.capitalize() for word in field_name.split("_")) + "Item"
+                    )
                     if model_name not in models:
                         models[model_name] = create_model(
                             model_name,
                             __config__=ConfigDict(arbitrary_types_allowed=True),
-                            **nested_fields
+                            **nested_fields,
                         )
                     return List[models[model_name]]
                 elif value:
@@ -437,23 +463,23 @@ class ModelGenerator:
         # Process each field
         fields = {}
         for field_name, value in data.items():
-            fields[field_name] = (process_value(value, field_name), None)
+            fields[field_name] = (process_value(value, field_name), ...)
 
         # Create main model
         main_model_name = "".join(word.capitalize() for word in self.name.split("_"))
         models[main_model_name] = create_model(
             main_model_name,
             __config__=ConfigDict(arbitrary_types_allowed=True),
-            **fields
+            **fields,
         )
-        
+
         return models[main_model_name]
 
     def from_description(
         self,
         fields: List[Dict[str, Any]],
         api_key: Optional[str] = None,
-        openai_model: Optional[str] = None
+        openai_model: Optional[str] = None,
     ) -> Type[BaseModel]:
         """
         Generate a Pydantic model from a list of field descriptions.
@@ -533,10 +559,13 @@ class ModelGenerator:
         response = client.chat.completions.create(
             model=openai_model or self.openai_model,
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that generates accurate Pydantic model schemas. Always return valid JSON."},
-                {"role": "user", "content": prompt}
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that generates accurate Pydantic model schemas. Always return valid JSON.",
+                },
+                {"role": "user", "content": prompt},
             ],
-            response_format={"type": "json_object"}
+            response_format={"type": "json_object"},
         )
 
         # Parse the response
@@ -544,7 +573,9 @@ class ModelGenerator:
         try:
             schema = json.loads(schema_str)
         except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse OpenAI response as JSON: {e}\nResponse: {schema_str}")
+            raise ValueError(
+                f"Failed to parse OpenAI response as JSON: {e}\nResponse: {schema_str}"
+            )
 
         # Create model fields
         fields = {}
@@ -558,7 +589,7 @@ class ModelGenerator:
             "Dict": Dict,
             "Optional": Optional,
             "Any": Any,
-            "Union": Union
+            "Union": Union,
         }
 
         for field_name, field_info in schema["models"]["main_model"]["fields"].items():
@@ -566,13 +597,18 @@ class ModelGenerator:
                 field_type = eval(field_info["type"], type_globals)
                 if field_info["is_nullable"]:
                     field_type = Optional[field_type]
-                fields[field_name] = (field_type, Field(description=field_info["description"]))
+                fields[field_name] = (
+                    field_type,
+                    Field(description=field_info["description"]),
+                )
             except NameError as e:
-                raise ValueError(f"Invalid type '{field_info['type']}' for field '{field_name}': {e}")
+                raise ValueError(
+                    f"Invalid type '{field_info['type']}' for field '{field_name}': {e}"
+                )
 
         # Create model with configuration
         return create_model(
             self.name,
             __config__=ConfigDict(arbitrary_types_allowed=True),
-            **fields
+            **fields,
         )

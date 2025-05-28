@@ -2,12 +2,13 @@
 Generated Pydantic model.
 """
 
-from builtins import float
-from builtins import str
-from datetime import datetime
-from pydantic import BaseModel, Field, validator
-from typing import Union, Optional, Any, List, Dict
 import math
+from builtins import float, str
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field, validator
+
 
 class SalesRecord(BaseModel):
     Date: datetime
@@ -19,8 +20,7 @@ class SalesRecord(BaseModel):
     TotalPrice: float
     Region: str
 
-
-    @validator('*', pre=True)
+    @validator("*", pre=True)
     def handle_nan(cls, v: Any) -> Any:
         if isinstance(v, float) and math.isnan(v):
             return None

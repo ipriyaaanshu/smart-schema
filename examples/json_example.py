@@ -33,7 +33,10 @@ def main():
         "orders": [
             {
                 "order_id": "ORD-001",
-                "items": [{"product_id": "P1", "quantity": 2}, {"product_id": "P2", "quantity": 1}],
+                "items": [
+                    {"product_id": "P1", "quantity": 2},
+                    {"product_id": "P2", "quantity": 1},
+                ],
                 "total": 99.99,
                 "created_at": "2024-03-20T10:00:00",
             }

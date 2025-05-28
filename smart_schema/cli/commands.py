@@ -4,9 +4,9 @@ Command-line interface commands for Smart Schema.
 
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 import typer
+from pydantic import BaseModel
 from rich.console import Console
 from rich.panel import Panel
 

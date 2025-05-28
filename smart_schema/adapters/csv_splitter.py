@@ -3,7 +3,7 @@ CSV file splitting utilities.
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import pandas as pd
 from rich.console import Console
@@ -31,9 +31,9 @@ def split_by_rows(
         start = i * rows_per_file
         end = min(start + rows_per_file, total_rows)
         part_df = df.iloc[start:end]
-        out_path = f"{output_prefix}{i+1}.csv"
+        out_path = f"{output_prefix}{i + 1}.csv"
         part_df.to_csv(out_path, index=False)
-        console.print(f"[green]Wrote rows {start+1}-{end} to {out_path}[/green]")
+        console.print(f"[green]Wrote rows {start + 1}-{end} to {out_path}[/green]")
 
 
 def split_by_column(
@@ -57,3 +57,21 @@ def split_by_column(
         out_path = f"{output_prefix}{safe_value}.csv"
         group.to_csv(out_path, index=False)
         console.print(f"[green]Wrote {len(group)} rows for {column}={value} to {out_path}[/green]")
+
+
+def split_dataframe_by_row_count(self, df: pd.DataFrame, rows_per_chunk: int) -> List[pd.DataFrame]:
+    """Split a DataFrame by a specified number of rows per chunk."""
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Input df must be a pandas DataFrame.")
+    if not isinstance(rows_per_chunk, int) or rows_per_chunk <= 0:
+        raise ValueError("Number of rows per chunk must be a positive integer.")
+
+    num_chunks = (len(df) + rows_per_chunk - 1) // rows_per_chunk
+    chunks = []
+    for i in range(num_chunks):
+        start_row = i * rows_per_chunk
+        end_row = (i + 1) * rows_per_chunk
+        # Ensure end_row does not exceed DataFrame length
+        end_row = min(end_row, len(df))
+        chunks.append(df.iloc[start_row:end_row])
+    return chunks

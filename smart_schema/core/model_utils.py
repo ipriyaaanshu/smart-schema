@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Type, Union, get_args, get_origin,
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, Field, create_model, validator, ValidationError
+from pydantic import BaseModel, Field, ValidationError, create_model, validator
 
 from ..utils.dataframe_utils import (
     align_dataframe_with_model,
@@ -57,7 +57,7 @@ def _generate_schema_from_dict(
         field_info = {
             "type": _infer_type_from_value(value),
             "is_nullable": value is None,
-            "description": f"Field {key} from {field_name}" if field_name else f"Field {key}",
+            "description": (f"Field {key} from {field_name}" if field_name else f"Field {key}"),
         }
 
         # Handle nested dictionaries
@@ -80,7 +80,8 @@ def _generate_schema_from_dict(
         elif isinstance(value, list) and value and isinstance(value[0], dict):
             # Create a model for the list items
             item_schema = _generate_schema_from_dict(
-                value[0], f"{field_name}.{key}[0]" if field_name else f"{key}[0]"
+                value[0],
+                f"{field_name}.{key}[0]" if field_name else f"{key}[0]",
             )
             item_model_name = f"{key.title()}ItemModel"
             item_model = create_model(
@@ -262,7 +263,7 @@ def save_model_to_file(
     required_imports = {
         "from typing import Union, Optional, Any, List, Dict",
         "from pydantic import BaseModel, Field, validator",
-        "import math"
+        "import math",
     }
 
     def get_type_module_and_name(type_hint: Any) -> tuple[Optional[str], str]:
@@ -278,12 +279,14 @@ def save_model_to_file(
         if origin in (List, list, Dict, dict):
             for arg in args:
                 module, _ = get_type_module_and_name(arg)
-                if module and module not in ['typing', '__builtin__']:
-                    required_imports.add(f"from {module} import {arg.__name__ if hasattr(arg, '__name__') else arg}")
-            return None, type_hint.__name__ if hasattr(type_hint, '__name__') else str(type_hint)
-        
-        module = getattr(type_hint, '__module__', None)
-        name = getattr(type_hint, '__name__', str(type_hint))
+                if module and module not in ["typing", "__builtin__"]:
+                    required_imports.add(
+                        f"from {module} import {arg.__name__ if hasattr(arg, '__name__') else arg}"
+                    )
+            return None, (type_hint.__name__ if hasattr(type_hint, "__name__") else str(type_hint))
+
+        module = getattr(type_hint, "__module__", None)
+        name = getattr(type_hint, "__name__", str(type_hint))
         return module, name
 
     def collect_nested_models(model_type: Type[BaseModel], model_name_param: str) -> None:
@@ -295,30 +298,30 @@ def save_model_to_file(
 
         for field in model_type.model_fields.values():
             field_type_annotation = field.annotation
-            
+
             module, type_name = get_type_module_and_name(field_type_annotation)
-            if module and module not in ['typing', '__builtin__']:
+            if module and module not in ["typing", "__builtin__"]:
                 actual_type_to_import = type_name
-                if '.' in type_name:
-                     actual_type_to_import = type_name.split('.')[-1]
-                
+                if "." in type_name:
+                    actual_type_to_import = type_name.split(".")[-1]
+
                 is_nested_model = False
-                if module == model_type.__module__ :
-                    if hasattr(field_type_annotation, 'model_fields'):
-                         is_nested_model = True
-                
+                if module == model_type.__module__:
+                    if hasattr(field_type_annotation, "model_fields"):
+                        is_nested_model = True
+
                 if not is_nested_model:
-                     required_imports.add(f"from {module} import {actual_type_to_import}")
+                    required_imports.add(f"from {module} import {actual_type_to_import}")
 
             origin = get_origin(field_type_annotation)
             args = get_args(field_type_annotation)
 
-            if origin is list and args and hasattr(args[0], 'model_fields'):
+            if origin is list and args and hasattr(args[0], "model_fields"):
                 item_type = args[0]
                 item_name = item_type.__name__
                 model_dependencies[model_name_param].add(item_name)
                 collect_nested_models(item_type, item_name)
-            elif hasattr(field_type_annotation, 'model_fields'):
+            elif hasattr(field_type_annotation, "model_fields"):
                 type_name = field_type_annotation.__name__
                 model_dependencies[model_name_param].add(type_name)
                 collect_nested_models(field_type_annotation, type_name)
@@ -432,27 +435,27 @@ def load_and_validate_json_as_model(
         Prints error messages to the console on failure.
     """
     try:
-        file_path = Path(file_path) # Ensure it's a Path object
-        with open(file_path, 'r') as f:
+        file_path = Path(file_path)  # Ensure it's a Path object
+        with open(file_path, "r") as f:
             config_data = json.load(f)
-        
+
         # Validate and instantiate the model
         validated_model = model_class(**config_data)
         # print(f"Successfully loaded and validated {file_path} as {model_class.__name__}") # Optional: success message
         return validated_model
-            
+
     except FileNotFoundError:
         print(f"Error: Configuration file not found at {file_path}")
         return None
     except json.JSONDecodeError:
         print(f"Error: Invalid JSON in configuration file at {file_path}")
         return None
-    except ValidationError as e: # Pydantic's ValidationError
+    except ValidationError as e:  # Pydantic's ValidationError
         print(f"Error: Configuration validation failed for {file_path}")
         # print(e.errors()) # The notebook already prints this if desired
         # For a library function, printing all errors might be too verbose by default.
         # Consider returning errors or having a verbose flag if more detail is needed here.
         return None
-    except Exception as e: # Catch any other unexpected errors during loading/instantiation
+    except Exception as e:  # Catch any other unexpected errors during loading/instantiation
         print(f"An unexpected error occurred while processing {file_path}: {e}")
         return None

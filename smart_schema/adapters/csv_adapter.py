@@ -3,12 +3,9 @@ CSV file handling functionality for Smart Schema.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional
 
 import pandas as pd
-
-from ..core.model_generator import ModelGenerator
-from ..core.model_validator import ModelValidator
 
 
 class CSVAdapter:
@@ -55,7 +52,10 @@ class CSVAdapter:
         df.to_csv(file_path, index=index)
 
     def split_by_rows(
-        self, input_file: str, rows_per_file: int, output_prefix: Optional[str] = None
+        self,
+        input_file: str,
+        rows_per_file: int,
+        output_prefix: Optional[str] = None,
     ) -> List[str]:
         """Split a CSV file into multiple files based on row count.
 
@@ -72,7 +72,7 @@ class CSVAdapter:
 
         output_files = []
         for i, chunk in enumerate(pd.read_csv(input_file, chunksize=rows_per_file)):
-            output_file = f"{prefix}_{i+1}.csv"
+            output_file = f"{prefix}_{i + 1}.csv"
             chunk.to_csv(output_file, index=False)
             output_files.append(output_file)
 
@@ -103,3 +103,21 @@ class CSVAdapter:
             output_files.append(output_file)
 
         return output_files
+
+    def split_dataframe(self, df: pd.DataFrame, chunk_size: int) -> List[pd.DataFrame]:
+        """Split a DataFrame into multiple smaller DataFrames based on the specified chunk size.
+
+        Args:
+            df: The DataFrame to split.
+            chunk_size: Number of rows per chunk.
+
+        Returns:
+            List of smaller DataFrames.
+        """
+        chunks = []
+        for i in range(0, len(df), chunk_size):
+            chunks.append(df.iloc[i: i + chunk_size])
+        return chunks
+
+    def _write_chunk_to_file(self, df_chunk: pd.DataFrame, output_path: Path) -> None:
+        df_chunk.to_csv(output_path, index=False)

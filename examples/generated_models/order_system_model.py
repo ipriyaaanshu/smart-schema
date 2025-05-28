@@ -1,10 +1,13 @@
-from pydantic import BaseModel
-from typing import List, Dict
 from datetime import datetime
+from typing import Dict, List
+
+from pydantic import BaseModel
+
 
 class UserPreferences(BaseModel):
     theme: str
     notifications: bool
+
 
 class User(BaseModel):
     id: int
@@ -13,9 +16,11 @@ class User(BaseModel):
     is_active: bool
     preferences: UserPreferences
 
+
 class OrderItem(BaseModel):
     product_id: str
     quantity: int
+
 
 class Order(BaseModel):
     order_id: str
@@ -23,9 +28,11 @@ class Order(BaseModel):
     total: float
     created_at: datetime
 
+
 class Metadata(BaseModel):
     created_at: datetime
     version: str
+
 
 class OrderSystem(BaseModel):
     user: User
