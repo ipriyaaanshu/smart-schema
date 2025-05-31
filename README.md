@@ -31,8 +31,6 @@ You can install Smart Schema using pip. Ensure you have Python 3.8+ installed.
 ```bash
 pip install smart-schema
 ```
-*(Note: If `smart-schema` is not yet on PyPI, you might install from source or use `pip install -r requirements.txt` if a requirements file is provided in the repository).*
-
 For OpenAI-powered smart inference, you'll also need the `openai` library:
 ```bash
 pip install openai
